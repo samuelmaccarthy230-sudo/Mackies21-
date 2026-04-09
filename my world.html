@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Her World — Chaos & Grace</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mood: 0;
+    --c1: #f2c4ce; --c2: #b5838d; --c3: #1a0a0e; --c4: #e8a0b0;
+    --accent: #d4a0c0; --text: #1a0a0e; --soft: #fff5f7;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--soft); color: var(--text); font-family: 'DM Sans', sans-serif;
+    cursor: none; overflow-x: hidden; transition: background 1.2s ease, color 1.2s ease;
+  }
+
+  /* === PORTAL STYLES === */
+  #portal-overlay {
+    position: fixed; inset: 0; background: #1a0a0e; z-index: 10000;
+    display: flex; align-items: center; justify-content: center; color: white;
+    transition: transform 1.2s cubic-bezier(0.8, 0, 0.2, 1);
+  }
+  .portal-card { text-align: center; width: 90%; max-width: 400px; padding: 40px; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; background: rgba(255,255,255,0.02); backdrop-filter: blur(10px); }
+  .portal-input { background: transparent; border: none; border-bottom: 1px solid var(--c1); color: white; font-size: 16px; font-family: 'Cormorant Garamond'; margin: 15px 0; width: 100%; text-align: center; outline: none; padding: 10px; }
+  .file-input-label { display: block; margin: 10px 0; font-size: 12px; color: var(--c1); cursor: pointer; border: 1px dashed var(--c1); padding: 10px; border-radius: 5px; }
+  .portal-btn { margin-top: 20px; padding: 12px 40px; border-radius: 50px; border: 1px solid var(--c1); background: transparent; color: var(--c1); cursor: none; transition: 0.3s; }
+
+  /* === PROFILE HEADER === */
+  .profile-container { position: fixed; top: 70px; left: 20px; z-index: 101; display: flex; align-items: center; gap: 10px; }
+  #pfp-display { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--c2); object-fit: cover; display: none; }
+  .user-name-tag { font-family: 'Playfair Display'; font-style: italic; font-size: 14px; color: var(--c2); }
+
+  /* === ORIGINAL CURSOR === */
+  .cursor { position: fixed; width: 12px; height: 12px; background: var(--c2); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: transform 0.08s, background 0.5s, width 0.2s, height 0.2s; mix-blend-mode: multiply; }
+  .cursor-ring { position: fixed; width: 36px; height: 36px; border: 1.5px solid var(--c2); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%); transition: all 0.18s ease, border-color 0.5s; }
+
+  /* === ORIGINAL MOOD BAR === */
+  .mood-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px 24px; background: rgba(255,245,247,0.88); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(180,100,130,0.12); transition: background 1.2s; }
+  .mood-label { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; color: var(--c2); margin-right: 8px; letter-spacing: 0.05em; opacity: 0.8; }
+  .mood-btn { border: none; background: none; cursor: none; font-size: 22px; padding: 4px 8px; border-radius: 50px; transition: transform 0.25s, background 0.2s; line-height: 1; }
+  .mood-btn.active { transform: scale(1.5); filter: drop-shadow(0 0 6px rgba(200,100,140,0.5)); }
+
+  /* === ORIGINAL NAV DOTS === */
+  nav { position: fixed; right: 32px; top: 50%; transform: translateY(-50%); z-index: 99; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+  .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c2); opacity: 0.3; cursor: none; transition: opacity 0.3s, transform 0.3s, background 0.5s; text-decoration: none; position: relative; }
+  .nav-dot:hover, .nav-dot.active { opacity: 1; transform: scale(1.6); }
+  .nav-dot span { position: absolute; right: 20px; font-size: 10px; letter-spacing: 0.1em; color: var(--c2); opacity: 0; white-space: nowrap; font-family: 'DM Sans', sans-serif; font-weight: 300; transition: opacity 0.2s; top: 50%; transform: translateY(-50%); }
+  .nav-dot:hover span { opacity: 1; }
+
+  /* === ORIGINAL SECTIONS & HERO === */
+  section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; position: relative; padding: 80px 10vw; }
+  #hero { overflow: hidden; background: linear-gradient(135deg, #fff0f4 0%, #fde8f0 40%, #f5d5e4 100%); transition: background 1.2s; }
+  .hero-bg-circle { position: absolute; border-radius: 50%; pointer-events: none; transition: background 1.2s; }
+  .hbc1 { width: 600px; height: 600px; right: -80px; top: -120px; background: radial-gradient(circle, rgba(212,160,192,0.28) 0%, transparent 70%); animation: floatA 8s ease-in-out infinite; }
+  .hbc2 { width: 300px; height: 300px; left: 30%; bottom: -60px; background: radial-gradient(circle, rgba(181,131,141,0.18) 0%, transparent 70%); animation: floatB 11s ease-in-out infinite; }
+  @keyframes floatA { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-30px) scale(1.04)} }
+  @keyframes floatB { 0%,100%{transform:translateY(0)} 60%{transform:translateY(20px)} }
+  .hero-tag { font-family: 'Cormorant Garamond'; font-style: italic; font-size: clamp(12px, 1.5vw, 14px); letter-spacing: 0.2em; color: var(--c2); margin-bottom: 18px; animation: fadeUp 0.8s 0.2s forwards; opacity: 0; }
+  .hero-title { font-family: 'Playfair Display'; font-size: clamp(52px, 9vw, 110px); line-height: 0.95; color: var(--c3); margin-bottom: 28px; animation: fadeUp 0.9s 0.4s forwards; opacity: 0; transition: color 1.2s; }
+  .hero-title em { font-style: italic; color: var(--c2); transition: color 1.2s; }
+  .hero-sub { font-family: 'Cormorant Garamond'; font-size: clamp(18px, 2.5vw, 26px); font-weight: 300; font-style: italic; color: var(--c2); max-width: 480px; line-height: 1.65; animation: fadeUp 0.9s 0.65s forwards; opacity: 0; transition: color 1.2s; }
+
+  /* === ORIGINAL MOODS GRID === */
+  #moods { background: #1a0a0e; color: #fff5f7; transition: background 1.2s, color 1.2s; overflow: hidden; }
+  .moods-heading { font-family: 'Playfair Display'; font-size: clamp(36px, 5vw, 64px); font-style: italic; margin-bottom: 16px; color: #f2c4ce; transition: color 1.2s; }
+  .moods-sub { font-size: 14px; letter-spacing: 0.12em; color: rgba(242,196,206,0.5); text-transform: uppercase; margin-bottom: 64px; font-weight: 300; }
+  .moods-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2px; }
+  .mood-card { padding: 44px 32px; background: rgba(255,255,255,0.03); border: 1px solid rgba(242,196,206,0.08); transition: 0.4s; cursor: none; position: relative; overflow: hidden; }
+  .mood-card:hover { border-color: rgba(212,160,192,0.3); transform: translateY(-4px); }
+  .mood-emoji { font-size: 36px; margin-bottom: 20px; display: block; }
+  .mood-name { font-family: 'Playfair Display'; font-size: 22px; font-style: italic; color: #f2c4ce; margin-bottom: 12px; }
+  .mood-desc { font-size: 13px; line-height: 1.8; color: rgba(255,245,247,0.5); font-weight: 300; }
+
+  /* === ORIGINAL QUOTES === */
+  #quotes { background: linear-gradient(160deg, #fde8f0 0%, #f5d0e4 50%, #edd0e8 100%); transition: background 1.2s; overflow: hidden; }
+  .quote-mark { font-family: 'Playfair Display'; font-size: 180px; line-height: 0.7; color: rgba(181,131,141,0.15); position: absolute; top: -20px; left: -20px; }
+  .quote-text { font-family: 'Playfair Display'; font-size: clamp(22px, 3.5vw, 42px); font-style: italic; line-height: 1.45; color: #5a2035; position: relative; z-index: 1; transition: 0.5s; }
+  .quote-author { margin-top: 28px; font-size: 12px; letter-spacing: 0.18em; color: var(--c2); text-transform: uppercase; font-weight: 500; }
+  .quotes-nav { display: flex; gap: 10px; margin-top: 48px; }
+  .q-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(181,131,141,0.4); background: none; cursor: none; color: var(--c2); display: flex; align-items: center; justify-content: center; transition: 0.25s; }
+
+  /* === ORIGINAL JOURNAL === */
+  #journal { background: #fff5f7; transition: background 1.2s; }
+  .journal-entries { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+  .journal-card { background: #fff; border: 1px solid rgba(181,131,141,0.14); padding: 38px 32px; position: relative; transition: 0.35s; cursor: none; }
+  .jc-date { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c2); margin-bottom: 16px; }
+  .jc-title { font-family: 'Playfair Display'; font-size: 22px; margin-bottom: 14px; font-style: italic; }
+  .jc-body { font-size: 13.5px; line-height: 1.9; color: rgba(26,10,14,0.6); }
+
+  /* === NEW PERIOD & MACKIES ADVICE === */
+  .advice-section { background: #fff; padding: 40px; border-left: 4px solid var(--c1); margin-top: 50px; }
+
+  /* === ORIGINAL MANIFESTO === */
+  #manifesto { background: #1a0a0e; color: #fff5f7; text-align: center; align-items: center; transition: background 1.2s; }
+  .manifesto-heading { font-family: 'Cormorant Garamond'; font-style: italic; font-size: 14px; letter-spacing: 0.25em; color: rgba(242,196,206,0.5); text-transform: uppercase; margin-bottom: 40px; }
+  .manifesto-lines { display: flex; flex-direction: column; gap: 32px; max-width: 680px; }
+  .manifesto-line { font-family: 'Playfair Display'; font-size: clamp(20px, 3vw, 36px); line-height: 1.4; opacity: 0; transform: translateY(24px); transition: 0.8s; }
+  .manifesto-line.visible { opacity: 1; transform: translateY(0); }
+  .manifesto-line em { color: #f2c4ce; font-style: italic; }
+
+  /* === AI CHAT WIDGET === */
+  #ai-widget { position: fixed; bottom: 30px; right: 30px; z-index: 1000; }
+  #chat-bubble { width: 60px; height: 60px; background: var(--c2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+  #chat-window { position: absolute; bottom: 80px; right: 0; width: 300px; height: 400px; background: white; border-radius: 20px; display: none; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid var(--c1); }
+  .chat-header { background: var(--c3); color: var(--c1); padding: 15px; font-family: 'Playfair Display'; }
+  #chat-msgs { flex: 1; padding: 15px; overflow-y: auto; font-size: 13px; color: #444; }
+  .chat-input { padding: 10px; border-top: 1px solid #eee; display: flex; }
+  .chat-input input { flex: 1; border: none; outline: none; padding: 5px; }
+
+  /* HELPERS */
+  .reveal { opacity: 0; transform: translateY(30px); transition: 0.9s; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(90deg, var(--c1), var(--c2)); z-index: 999; transition: width 0.1s; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* MOOD THEMES */
+  body.mood-tender { --c1: #f2c4ce; --c2: #b5838d; --c3: #1a0a0e; --soft: #fff5f7; }
+  body.mood-storm { --c1: #8a7bab; --c2: #5c4d7d; --c3: #0d0818; --soft: #f0eefa; }
+  body.mood-golden { --c1: #e8c97a; --c2: #b8902e; --c3: #1a1408; --soft: #fdf9ef; }
+  body.mood-ice { --c1: #a8d4e8; --c2: #5a90b0; --c3: #081820; --soft: #f0f8ff; }
+  body.mood-fire { --c1: #f0907a; --c2: #c04840; --c3: #1a0808; --soft: #fff5f0; }
+</style>
+</head>
+<body class="mood-tender">
+
+<div id="progress" class="progress-bar"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div id="portal-overlay">
+  <div class="portal-card">
+    <h2 style="font-family: 'Playfair Display'; margin-bottom: 10px;">The Sanctuary</h2>
+    <p style="font-family: 'Cormorant Garamond'; font-style: italic; font-size: 14px;">"Specially curated by Mackies & Renkies"</p>
+    <input type="text" id="userNameInput" class="portal-input" placeholder="Your Name">
+    <input type="text" id="userStatusInput" class="portal-input" placeholder="Current heart status?">
+    <label class="file-input-label">Upload Profile Pic <input type="file" id="pfpInput" hidden accept="image/*"></label>
+    <button class="portal-btn" onclick="closePortal()">Enter World</button>
+  </div>
+</div>
+
+<div class="profile-container">
+  <img id="pfp-display" src="">
+  <span class="user-name-tag" id="user-name-tag"></span>
+</div>
+
+<div class="mood-bar">
+  <span class="mood-label">today's mood:</span>
+  <button class="mood-btn active" data-mood="mood-tender" title="Tender">🌸</button>
+  <button class="mood-btn" data-mood="mood-storm" title="Stormy">🌩️</button>
+  <button class="mood-btn" data-mood="mood-golden" title="Golden">✨</button>
+  <button class="mood-btn" data-mood="mood-ice" title="Ice Queen">🧊</button>
+  <button class="mood-btn" data-mood="mood-fire" title="Fire">🔥</button>
+</div>
+
+<nav>
+  <a href="#hero" class="nav-dot active"><span>Home</span></a>
+  <a href="#moods" class="nav-dot"><span>Moods</span></a>
+  <a href="#quotes" class="nav-dot"><span>Quotes</span></a>
+  <a href="#journal" class="nav-dot"><span>Journal</span></a>
+  <a href="#manifesto" class="nav-dot"><span>Manifesto</span></a>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg-circle hbc1"></div>
+  <div class="hero-bg-circle hbc2"></div>
+  <p class="hero-tag">a girl in full bloom</p>
+  <h1 class="hero-title">Soft<br>&amp; <em>Fierce.</em></h1>
+  <p class="hero-sub">She contains multitudes — gentle and untamed, tender and sharp, falling apart and putting herself back together, all before noon.</p>
+</section>
+
+<section id="advice">
+  <div class="reveal advice-section">
+    <h2 style="font-family: 'Playfair Display'; color: var(--c2); font-style: italic;">The Care Corner</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 30px;">
+      <div>
+        <h4 style="font-family: 'DM Sans'; letter-spacing: 1px; margin-bottom: 10px;">PERIOD CARE</h4>
+        <p style="font-size: 14px; line-height: 1.8;">Warmth is your best friend. Lemon water, soft blankets, and zero guilt for resting. You're growing, even when you're still.</p>
+      </div>
+      <div>
+        <h4 style="font-family: 'DM Sans'; letter-spacing: 1px; margin-bottom: 10px;">A NOTE FROM MACKIES & RENKIES</h4>
+        <p style="font-size: 14px; line-height: 1.8; font-weight: 500;">Never lose a person who truly takes care of you. We often ignore those who stay because we are busy chasing those who leave. Keep your real ones close.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="moods">
+  <div class="reveal">
+    <p class="moods-sub">She is never just one thing</p>
+    <h2 class="moods-heading">Her Many Selves</h2>
+  </div>
+  <div class="moods-grid reveal">
+    <div class="mood-card">
+      <span class="mood-emoji">🌸</span>
+      <div class="mood-name">The Tender One</div>
+      <p class="mood-desc">Leaves love notes. Cries at sunsets. Feels everything so deeply it becomes art.</p>
+    </div>
+    <div class="mood-card">
+      <span class="mood-emoji">🌩️</span>
+      <div class="mood-name">The Storm</div>
+      <p class="mood-desc">Speaks her mind before she can stop herself. Unapologetic. Electric. Alive.</p>
+    </div>
+    <div class="mood-card">
+      <span class="mood-emoji">🧊</span>
+      <div class="mood-name">The Ice Queen</div>
+      <p class="mood-desc">Unbothered. Composed. Watching. You will not know what she's thinking.</p>
+    </div>
+    <div class="mood-card">
+      <span class="mood-emoji">✨</span>
+      <div class="mood-name">The Dreamer</div>
+      <p class="mood-desc">Everything sparkles. She sees beauty in cracks. Makes wishes at 11:11.</p>
+    </div>
+    <div class="mood-card">
+      <span class="mood-emoji">🔥</span>
+      <div class="mood-name">The Force</div>
+      <p class="mood-desc">Decided. Burning. Gets what she wants with a single look and steady hands.</p>
+    </div>
+    <div class="mood-card">
+      <span class="mood-emoji">🍂</span>
+      <div class="mood-name">The Philosopher</div>
+      <p class="mood-desc">3am thoughts that could fill a book. Older than her years. Quietly wise.</p>
+    </div>
+  </div>
+</section>
+
+<section id="quotes">
+  <div class="quotes-container">
+    <div class="quote-mark">"</div>
+    <p class="quote-text" id="quoteText">She was a girl who knew how to be happy even when she was sad. And that's important.</p>
+    <p class="quote-author" id="quoteAuthor">Marilyn Monroe</p>
+    <div class="quotes-nav">
+      <button class="q-btn" id="qPrev">←</button>
+      <button class="q-btn" id="qNext">→</button>
+    </div>
+  </div>
+</section>
+
+<section id="journal">
+  <h2 class="journal-heading reveal" style="font-family: 'Playfair Display'; font-size: 50px; margin-bottom: 30px;">Pages of Her</h2>
+  <div class="journal-entries">
+    <div class="journal-card reveal">
+      <div class="jc-date">A Tuesday that felt like Sunday</div>
+      <h3 class="jc-title">On Being Too Much</h3>
+      <p class="jc-body">They said I was too much. Too loud. Too sensitive. Too dramatic. I am not too much — they are not enough.</p>
+    </div>
+    <div class="journal-card reveal">
+      <div class="jc-date">After a hard conversation</div>
+      <h3 class="jc-title">Growth Is Ugly Before It's Beautiful</h3>
+      <p class="jc-body">Maturity isn't silence. It's choosing your battles. It's crying in the shower and then walking out composed.</p>
+    </div>
+  </div>
+</section>
+
+<section id="manifesto">
+  <p class="manifesto-heading">her rules for living</p>
+  <div class="manifesto-lines">
+    <p class="manifesto-line reveal">I am allowed to feel <em>everything</em> without apology.</p>
+    <p class="manifesto-line reveal">My sensitivity is not weakness — it is <em>precision</em>.</p>
+    <p class="manifesto-line reveal">I will be soft <em>and</em> strong. Both. Always.</p>
+    <p class="manifesto-line reveal">Growing up doesn't mean <em>shutting down</em>.</p>
+    <p class="manifesto-line reveal">She is <em>becoming</em>. Beautifully, messily, fully.</p>
+  </div>
+</section>
+
+<div id="ai-widget">
+  <div id="chat-window">
+    <div class="chat-header">Soul AI — Mackies/Renkies</div>
+    <div id="chat-msgs"><div><b>AI:</b> Welcome home. How are you feeling today?</div></div>
+    <div class="chat-input">
+      <input type="text" id="ai-input" placeholder="Type a message...">
+      <button onclick="sendAiMsg()" style="background:none; border:none; color:var(--c2); cursor:none;">Send</button>
+    </div>
+  </div>
+  <div id="chat-bubble" onclick="toggleChat()">💬</div>
+</div>
+
+<footer style="padding: 100px 10vw; text-align: center; border-top: 1px solid rgba(0,0,0,0.05);">
+  <p style="font-family: 'Playfair Display'; color: var(--c2); letter-spacing: 2px;">BY MACKIES & THE RENKIES</p>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e=>{mx=e.clientX;my=e.clientY;});
+(function anim(){
+  rx+=(mx-rx)*0.18; ry+=(my-ry)*0.18;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(anim);
+})();
+
+// PORTAL & PFP
+function closePortal() {
+  const name = document.getElementById('userNameInput').value || "Queen";
+  document.getElementById('user-name-tag').innerText = name;
+  const pfp = document.getElementById('pfpInput');
+  if(pfp.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => { 
+      const img = document.getElementById('pfp-display');
+      img.src = e.target.result; img.style.display='block';
+    };
+    reader.readAsDataURL(pfp.files[0]);
+  }
+  document.gt4etElementById('portal-overlay').style.transform = "translateY(-100%)";
+}
+
+// AI
+function toggleChat() {
+  const w = document.getElementById('chat-window');
+  w.style.display = (w.style.display==='flex')?'none':'flex';
+}
+function sendAiMsg() {
+  const inp = document.getElementById('ai-input');
+  const m = document.getElementById('chat-msgs');
+  if(!inp.value) return;
+  m.innerHTML += `<div style="text-align:right; margin:10px 0;"><b>You:</b> ${inp.value}</div>`;
+  setTimeout(() => {
+    m.innerHTML += `<div style="color:var(--c2); margin:10px 0;"><b>AI:</b> You are a masterpiece in progress. Stay fierce.</div>`;
+    inp.value=''; m.scrollTop = m.scrollHeight;
+  }, 600);
+}
+
+// MOODS
+const moodBtns = document.querySelectorAll('.mood-btn');
+moodBtns.forEach(btn => {
+  btn.onclick = () => {
+    moodBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.body.className = btn.dataset.mood;
+  }
+});
+
+// QUOTES SLIDER (Original)
+const quotes = [
+  { text: "She was a girl who knew how to be happy even when she was sad.", author: "Marilyn Monroe" },
+  { text: "A girl should be two things: who and what she wants.", author: "Coco Chanel" },
+  { text: "The most beautiful thing a woman can wear is her confidence.", author: "Blake Lively" }
+];
+let qi = 0;
+function setQuote(i) {
+  const t = document.getElementById('quoteText');
+  const a = document.getElementById('quoteAuthor');
+  t.style.opacity = '0';
+  setTimeout(() => {
+    t.innerText = quotes[i].text; a.innerText = quotes[i].author; t.style.opacity = '1';
+  }, 300);
+}
+document.getElementById('qNext').onclick = () => { qi = (qi+1)%quotes.length; setQuote(qi); };
+document.getElementById('qPrev').onclick = () => { qi = (qi-1+quotes.length)%quotes.length; setQuote(qi); };
+
+// REVEALS
+const obs = new IntersectionObserver(ents => {
+  ents.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.1});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// PROGRESS
+window.onscroll = () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+};
+</script>
+</body>
+</html>
